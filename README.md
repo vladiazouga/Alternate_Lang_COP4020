@@ -38,3 +38,9 @@ These libraries were selected to maximize efficiency and functionality in handli
 
 ### Here is an image of the terminal 
 ![alt text](image.png)
+
+## Unit Testing of My Methods
+- These are pictures of my unit testing of my methods (4 of my methods are used to answer the questions)
+The last 3 methods are: adding an object, delete an object, list unique values 
+![alt text](image2.png)
+![alt text](image3.png)
