@@ -1,4 +1,4 @@
-# Cell Manipulation Script
+# Cell Manipulation Report
 
 ## Programming Language and Version
 This codebase is developed using **JavaScript** on the **Node.js** runtime environment. Node.js is chosen for its efficient handling of asynchronous operations and is powered by the V8 JavaScript engine, making it ideal for server-side applications.
