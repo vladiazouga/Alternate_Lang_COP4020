@@ -35,3 +35,6 @@ These libraries were selected to maximize efficiency and functionality in handli
 
 **Q4: What year had the most phones launched in any year later than 1999?**
 - **A4:** The year 2019 saw the most phones launched, with a total of 299 launches.
+
+### Here is an image of the terminal 
+![alt text](image.png)
