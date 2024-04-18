@@ -1,13 +1,8 @@
 const fs = require('fs');
 const parse = require('csv-parser');
-const { count } = require('console');
 const readline = require('readline');
 
-
 const path = "cells.csv";
-
-
-
 
 class Cell {
     constructor(oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os) {
@@ -371,12 +366,6 @@ class CellManager {
 }
 
 
-// Use cellManager to manage cells
-
-
-
-// Assuming Cell and CellManager classes are already defined and imported
-
 // Create a parser object
 const parser = parse({
     columns: true,   // Enable column names based on the first row
@@ -417,9 +406,6 @@ fs.createReadStream(path)
         cellManager.countPhonesWithNoMoreThanOneSensor();
         cellManager.findYearWithMostPhonesLaunched();
         cellManager.mainMenu();
-
-        // Potentially interactive menu or other functionality
-        // mainMenu(); Adjust the mainMenu to use cellManager if needed
     })
     .on('error', (err) => {
         console.error('Error reading the CSV file:', err);
