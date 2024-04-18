@@ -3,41 +3,33 @@ const parse = require('csv-parser');
 const { count } = require('console');
 const readline = require('readline');
 
-//const rl = readline.createInterface({
-//    input: process.stdin,
-//    output: process.stdout
-//});
 
 const path = "cells.csv";
 
-/**
- * Validates the input by checking if it's non-null, non-empty, and not a hyphen.
- * @param {string} input - The input string to validate.
- * @return {string|null} - Returns the trimmed input if valid, or null otherwise.
- */
 
-function validateInput(input) {
-    if (!input || input.trim() === '' || input.trim() === '-') {
-        return null;
-    }
-    return input;
-}
 
 
 class Cell {
     constructor(oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os) {
-        this.oem = validateInput(oem);
-        this.model = validateInput(model);
+        this.oem = this.validateInput(oem);
+        this.model = this.validateInput(model);
         this.launch_announced = this.parseYear(launch_announced);
         this.launch_status = this.parseLaunchStatus(launch_status);
-        this.body_dimensions = validateInput(body_dimensions);
+        this.body_dimensions = this.validateInput(body_dimensions);
         this.body_weight = this.parseWeight(body_weight);
-        this.body_sim = validateInput(body_sim) || null;
-        this.display_type = validateInput(display_type);
+        this.body_sim = this.validateInput(body_sim) || null;
+        this.display_type = this.validateInput(display_type);
         this.display_size = this.parseDisplaySize(display_size);
-        this.display_resolution = validateInput(display_resolution);
+        this.display_resolution = this.validateInput(display_resolution);
         this.features_sensors = this.parseFeaturesSensors(features_sensors);
         this.platform_os = this.parsePlatformOS(platform_os);
+    }
+
+    validateInput(input) {
+        if (!input || input.trim() === '' || input.trim() === '-') {
+            return null;
+        }
+        return input;
     }
 
     parseYear(yearStr) {
