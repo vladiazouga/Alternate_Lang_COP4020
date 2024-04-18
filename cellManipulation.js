@@ -3,10 +3,10 @@ const parse = require('csv-parser');
 const { count } = require('console');
 const readline = require('readline');
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+//const rl = readline.createInterface({
+//    input: process.stdin,
+//    output: process.stdout
+//});
 
 const path = "cells.csv";
 
@@ -42,7 +42,7 @@ class Cell {
 
     parseYear(yearStr) {
         if (!yearStr || yearStr === '' || yearStr === '-') {
-            console.log("Input is invalid or not a string.");  // Debug: Log when input is invalid
+            //console.log("Input is invalid or not a string.");  // Debug: Log when input is invalid
             return null;
         }
         yearStr = yearStr.toString();
@@ -62,6 +62,10 @@ class Cell {
 
 
     parseLaunchStatus(statusStr) {
+        if (!statusStr) {
+            return null; // Return null early if statusStr is undefined or null
+        }
+        
         if (statusStr === 'Discontinued' || statusStr === 'Cancelled') {
             return statusStr;
         }
@@ -114,11 +118,12 @@ class Cell {
 
 
     parseFeaturesSensors(featuresStr) {
-        featuresStr = featuresStr.toString();
-
-        if (featuresStr === '' || !featuresStr || featuresStr === '-') {
+        
+        if (!featuresStr || featuresStr === '' || !featuresStr || featuresStr === '-') {
             return null; // Return null for invalid or missing inputs.
         }
+
+        featuresStr = featuresStr.toString();
         // Split the string by commas, trim each element, and filter out purely numeric entries.
         const features = featuresStr.split(',').map(feature => feature.trim());
         const validFeatures = features.filter(feature => isNaN(feature) || feature === 'V1'); // `isNaN` checks if the string is non-numeric or is 'V1'.
@@ -157,245 +162,228 @@ class Cell {
 
 }
 
-/**
- * Main menu to handle user actions in the console interface.
- */
-
-function mainMenu() {
-
-    rl.question('Choose an action (add, delete, list, exit): ', (action) => {
-        switch(action.trim().toLowerCase()) {
-            case 'add':
-                addCell(cells);
-                break;
-            case 'delete':
-                deleteCell(cells);
-                break;
-            case 'list':
-                listUniqueValues(cells);
-                mainMenu(cells);  // Return to the main menu after listing
-                break;
-            case 'exit':
-                rl.close();
-                break;
-            default:
-                console.log('Invalid option');
-                mainMenu(cells);  // Recall the menu until a valid option or 'exit' is chosen
-        }
-    });
-}
-
-/**
- * Calculates which OEM has the highest average body weight of their cell phones.
- * @param {Map} cellsMap - A Map of cell instances.
- * @return {string} - The OEM with the highest average body weight.
- */
-
-function findOEMWithHighestAverageWeight(cellsMap) {
-    const weightSumByOEM = new Map();
-    const countByOEM = new Map();
-
-    // Accumulate weights and count the number of models per OEM
-    cellsMap.forEach(cell => {
-        if (cell.body_weight !== null) {
-            const weight = parseFloat(cell.body_weight);
-            if (cell.oem === "HP") {
-                
-            }
-            if (weightSumByOEM.has(cell.oem)) {
-                weightSumByOEM.set(cell.oem, weightSumByOEM.get(cell.oem) + weight);
-            }
-            if (!weightSumByOEM.has(cell.oem)) {
-                weightSumByOEM.set(cell.oem, weight);
-            }
-            if (countByOEM.has(cell.oem)) {
-                countByOEM.set(cell.oem, countByOEM.get(cell.oem) + 1);
-            }
-            if (!countByOEM.has(cell.oem)) {
-                countByOEM.set(cell.oem, 1);
-            }
-        } else {
-            
-        }
-    });
-
-    
-
-    let maxAverage = -Infinity; // Initialize maxAverage
-    let oemWithMaxAverage = null;
-
-    // Calculate the average weight per OEM
-    weightSumByOEM.forEach((sum, oem) => {
-        const average = sum / countByOEM.get(oem);
-        //console.log(`OEM: ${oem}, Sum: ${sum}, Count: ${countByOEM.get(oem)}, Average: ${average}`);
-        if (average > maxAverage) {
-            maxAverage = average;
-            oemWithMaxAverage = oem;
-        }
-    });
-    
-    console.log(`\n Question 1) \tOEM with the highest average body weight: ${oemWithMaxAverage} with max average weight: ${maxAverage} (grams)`);
-    return oemWithMaxAverage; // Returns the OEM with the highest average weight
-}
-
-/**
- * Counts how many phones have only one feature sensor.
- * @param {Map} cells - A Map of cell instances.
- * @return {number} - The count of phones with only one feature sensor.
- */
-function countPhonesWithNoMoreThanOneSensor(cells) {
-    let count = 0;
-    cells.forEach(cell => {
-        const features = cell.features_sensors; // Assuming features_sensors is an array of features
-        if (features && features.length === 1) { // This checks for the presence of more than one feature
-            count++;
-        }
-    });
-    console.log(`\n Question 3) \tTotal number of phones without more than one sensor: ${count}`);
-}
-
-/**
- * Counts how many phones were announced and launched in different years.
- * @param {Map} cells - A Map of cell instances.
- * @return {number} - The count of phones with different announce and launch years.
- */
-function countDifferentAnnounceLaunchYears(cells) {
-    let count = 0;
-    cells.forEach(cell => {
-        if (cell.launch_announced && cell.launch_status && cell.launch_announced !== cell.launch_status) {
-            count++;
-        }
-    });
-    console.log(`\n Question 2) \tTotal number of phones announced and launched in different years: ${count}`);
-    return count;
-}
-
-/**
- * Finds the year with the most phone launches after 1999.
- * @param {Map} cells - A Map of cell instances.
- * @return {number} - The year with the most launches.
- */
-function findYearWithMostPhonesLaunched(cells) {
-    const launchYearCounts = new Map();
-
-    cells.forEach(cell => {
-        const launchYear = cell.launch_status; // Assuming this property holds the launch year
-        if (launchYear && launchYear > 1999) {
-            launchYearCounts.set(launchYear, (launchYearCounts.get(launchYear) || 0) + 1);
-        }
-    });
-
-    let maxYear = null;
-    let maxCount = 0;
-    for (let [year, count] of launchYearCounts) {
-        if (count > maxCount) {
-            maxCount = count;
-            maxYear = year;
-        }
+class CellManager {
+    constructor() {
+        this.cells = new Map();
+        this.rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
     }
 
-    console.log(`\n Question 4) \tYear with most phones launched (post-1999): ${maxYear} with ${maxCount} launches`);
-    return maxYear;
-}
-
-/**
- * Prompts the user to enter details for a new cell and adds it to the cells map.
- * @param {Map} cells - A Map to store cell instances.
- */
-function addCell(cells) {
-
-    console.log("\n\nEnter details for a new cell:");
-    rl.question('OEM: ', (oem) => {
-        rl.question('Model: ', (model) => {
-            rl.question('Launch Announced (year): ', (launch_announced) => {
-                rl.question('Launch Status: ', (launch_status) => {
-                    rl.question('Body Dimensions: ', (body_dimensions) => {
-                        rl.question('Body Weight: ', (body_weight) => {
-                            rl.question('Body SIM: ', (body_sim) => {
-                                rl.question('Display Type: ', (display_type) => {
-                                    rl.question('Display Size: ', (display_size) => {
-                                        rl.question('Display Resolution: ', (display_resolution) => {
-                                            rl.question('Features Sensors: ', (features_sensors) => {
-                                                rl.question('Platform OS: ', (platform_os) => {
-                                                    const cell = new Cell(oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os);
-                                                    cells.set(cells.size + 1, cell); // Using size + 1 as the key for simplicity
-                                                    console.log("New cell added:", cell);
-                                                    mainMenu(cells);
-                                                    
-                                                });
-                                            });
-                                        });
-                                    });
-                                });
-                            });
-                        });
-                    });
+    addCellInteractive() {
+        const questions = [
+            { key: 'oem', question: 'Enter OEM: ' },
+            { key: 'model', question: 'Enter model: ' },
+            { key: 'launch_announced', question: 'Enter launch year announced: ' },
+            { key: 'launch_status', question: 'Enter launch status: ' },
+            { key: 'body_dimensions', question: 'Enter body dimensions: ' },
+            { key: 'body_weight', question: 'Enter body weight (in grams): ' },
+            { key: 'body_sim', question: 'Enter body SIM type: ' },
+            { key: 'display_type', question: 'Enter display type: ' },
+            { key: 'display_size', question: 'Enter display size (in inches): ' },
+            { key: 'display_resolution', question: 'Enter display resolution: ' },
+            { key: 'features_sensors', question: 'Enter features and sensors: ' },
+            { key: 'platform_os', question: 'Enter platform OS: ' },
+        ];
+    
+        let cellData = {};
+    
+        const askQuestion = (index) => {
+            if (index < questions.length) {
+                this.rl.question(questions[index].question, (answer) => {
+                    cellData[questions[index].key] = answer.trim();
+                    askQuestion(index + 1);
                 });
+            } else {
+                try {
+                    this.addCell(
+                        cellData.oem,
+                        cellData.model,
+                        cellData.launch_announced,
+                        cellData.launch_status,
+                        cellData.body_dimensions,
+                        cellData.body_weight,
+                        cellData.body_sim,
+                        cellData.display_type,
+                        cellData.display_size,
+                        cellData.display_resolution,
+                        cellData.features_sensors,
+                        cellData.platform_os
+                    );
+                } catch (error) {
+                    console.error("Failed to add cell:", error);
+                }
+                this.mainMenu();
+            }
+        };
+    
+        askQuestion(0);
+    }
+    
+    addCell(oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os) {
+        console.log("Adding cell with data:", { oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os });  // Debugging
+        const cell = new Cell(oem, model, launch_announced, launch_status, body_dimensions, body_weight, body_sim, display_type, display_size, display_resolution, features_sensors, platform_os);
+        this.cells.set(this.cells.size + 1, cell);
+        console.log("New cell added:", cell);
+    }
+    
+
+    deleteCell() {
+        this.rl.question('\nEnter the index of the cell to delete: ', index => {
+            const cellIndex = parseInt(index);
+            if (this.cells.has(cellIndex)) {
+                this.cells.delete(cellIndex);
+                console.log(`Cell at index ${cellIndex} has been deleted.`);
+            } else {
+                console.log('No cell found at that index.');
+            }
+            this.mainMenu();  // Return to main menu after action
+        });
+    }
+
+    listUniqueValues() {
+        const uniqueValues = {
+            oem: new Set(),
+            model: new Set(),
+            launch_announced: new Set(),
+            launch_status: new Set(),
+            body_dimensions: new Set(),
+            body_weight: new Set(),
+            body_sim: new Set(),
+            display_type: new Set(),
+            display_size: new Set(),
+            display_resolution: new Set(),
+            features_sensors: new Set(),
+            platform_os: new Set()
+        };
+
+        this.cells.forEach(cell => {
+            Object.keys(uniqueValues).forEach(key => {
+                if (cell[key] !== undefined) {
+                    uniqueValues[key].add(cell[key]);
+                }
             });
         });
-    });
-}
 
-/**
- * Prompts the user for an index and deletes the corresponding cell from the map if found.
- * @param {Map} cells - A Map containing cell instances.
- */
-function deleteCell(cells) {
-
-
-    rl.question('\n\nEnter the index of the cell to delete: ', (index) => {
-        const cellIndex = parseInt(index);
-        if (cells.has(cellIndex)) {
-            cells.delete(cellIndex);
-            console.log(`Cell at index ${cellIndex} has been deleted.`);
-        } else {
-            console.log('No cell found at that index.');
+        for (let key in uniqueValues) {
+            console.log(`${key}: ${[...uniqueValues[key]].join(', ')}`);
         }
-        mainMenu(cells);  // Return to main menu after action
-    });
-}
+        this.mainMenu();
+    }
 
-/**
- * Lists all unique values for each attribute of the cells stored in the map.
- * @param {Map} cells - A Map containing cell instances.
- */
-function listUniqueValues(cells) {
-    const uniqueValues = {
-        oem: new Set(),
-        model: new Set(),
-        launch_announced: new Set(),
-        launch_status: new Set(),
-        body_dimensions: new Set(),
-        body_weight: new Set(),
-        body_sim: new Set(),
-        display_type: new Set(),
-        display_size: new Set(),
-        display_resolution: new Set(),
-        features_sensors: new Set(),
-        platform_os: new Set()
-    };
-
-    cells.forEach(cell => {
-        Object.keys(uniqueValues).forEach(key => {
-            if (cell[key] !== undefined) {
-                uniqueValues[key].add(cell[key]);
+    mainMenu() {
+        this.rl.question('\nChoose an action (add, delete, list, exit): ', action => {
+            switch(action.trim().toLowerCase()) {
+                case 'add':
+                    // Implement the logic to handle adding a cell here or call an addCell method
+                    this.addCellInteractive();  // Placeholder
+                    this.mainMenu();
+                    break;
+                case 'delete':
+                    this.deleteCell();
+                    break;
+                case 'list':
+                    this.listUniqueValues();
+                    break;
+                case 'exit':
+                    this.rl.close();
+                    break;
+                default:
+                    console.log('Invalid option');
+                    this.mainMenu();  // Recall the menu until a valid option or 'exit' is chosen
             }
         });
-    });
+    }
 
-    for (let key in uniqueValues) {
-        console.log(`${key}: ${[...uniqueValues[key]].join(', ')}`);
+    findOEMWithHighestAverageWeight() {
+        const weightSumByOEM = new Map();
+        const countByOEM = new Map();
+
+        this.cells.forEach(cell => {
+            if (cell.body_weight !== null) {
+                const weight = parseFloat(cell.body_weight);
+                if (weightSumByOEM.has(cell.oem)) {
+                    weightSumByOEM.set(cell.oem, weightSumByOEM.get(cell.oem) + weight);
+                } else {
+                    weightSumByOEM.set(cell.oem, weight);
+                }
+
+                if (countByOEM.has(cell.oem)) {
+                    countByOEM.set(cell.oem, countByOEM.get(cell.oem) + 1);
+                } else {
+                    countByOEM.set(cell.oem, 1);
+                }
+            }
+        });
+
+        let maxAverage = -Infinity;
+        let oemWithMaxAverage = null;
+
+        weightSumByOEM.forEach((sum, oem) => {
+            const average = sum / countByOEM.get(oem);
+            if (average > maxAverage) {
+                maxAverage = average;
+                oemWithMaxAverage = oem;
+            }
+        });
+
+        console.log(`OEM with the highest average body weight: ${oemWithMaxAverage} with max average weight: ${maxAverage} (grams)`);
+        return oemWithMaxAverage;
+    }
+
+    countPhonesWithNoMoreThanOneSensor() {
+        let count = 0;
+        this.cells.forEach(cell => {
+            const features = cell.features_sensors;
+            if (features && features.length === 1) {
+                count++;
+            }
+        });
+        console.log(`Total number of phones without more than one sensor: ${count}`);
+        return count;
+    }
+
+    countDifferentAnnounceLaunchYears() {
+        let count = 0;
+        this.cells.forEach(cell => {
+            if (cell.launch_announced && cell.launch_status && cell.launch_announced !== cell.launch_status) {
+                count++;
+            }
+        });
+        console.log(`Total number of phones announced and launched in different years: ${count}`);
+        return count;
+    }
+
+    findYearWithMostPhonesLaunched() {
+        const launchYearCounts = new Map();
+        this.cells.forEach(cell => {
+            const launchYear = cell.launch_status;
+            if (launchYear && launchYear > 1999) {
+                launchYearCounts.set(launchYear, (launchYearCounts.get(launchYear) || 0) + 1);
+            }
+        });
+
+        let maxYear = null;
+        let maxCount = 0;
+        for (let [year, count] of launchYearCounts) {
+            if (count > maxCount) {
+                maxCount = count;
+                maxYear = year;
+            }
+        }
+
+        console.log(`Year with most phones launched (post-1999): ${maxYear} with ${maxCount} launches`);
+        return maxYear;
     }
 }
 
 
+// Use cellManager to manage cells
 
 
 
-
-
-
-
+// Assuming Cell and CellManager classes are already defined and imported
 
 // Create a parser object
 const parser = parse({
@@ -404,15 +392,16 @@ const parser = parse({
     trim: true       // Trim leading and trailing spaces from cells
 });
 
-const cells = new Map();
-var ctr = 1;
+// Initialize the CellManager
+const cellManager = new CellManager();
+
 // Create a read stream from the file
 fs.createReadStream(path)
     .pipe(parser)   // Pipe the read stream to the CSV parser
     .on('data', (row) => {
-        console.log(row)
-        // Create an instance of Cell for each row
-        const cell = new Cell(
+        console.log(row);
+        // Add each cell to the CellManager
+        cellManager.addCell(
             row.oem,
             row.model,
             row.launch_announced,
@@ -426,25 +415,19 @@ fs.createReadStream(path)
             row.features_sensors,
             row.platform_os
         );
-
-
-        cells.set(ctr++, cell);
-        console.log(`Processed cell #${ctr-1}:`, cell);
-
     })
     .on('end', () => {
-
         console.log('CSV file has been successfully processed. \n');
-        findOEMWithHighestAverageWeight(cells);
-        countDifferentAnnounceLaunchYears(cells);
-        countPhonesWithNoMoreThanOneSensor(cells);
-        findYearWithMostPhonesLaunched(cells);
-        mainMenu(cells);
-        addCell(cells);
-        deleteCell(cells);
 
+        // Perform operations using methods from CellManager
+        cellManager.findOEMWithHighestAverageWeight();
+        cellManager.countDifferentAnnounceLaunchYears();
+        cellManager.countPhonesWithNoMoreThanOneSensor();
+        cellManager.findYearWithMostPhonesLaunched();
+        cellManager.mainMenu();
 
-
+        // Potentially interactive menu or other functionality
+        // mainMenu(); Adjust the mainMenu to use cellManager if needed
     })
     .on('error', (err) => {
         console.error('Error reading the CSV file:', err);
