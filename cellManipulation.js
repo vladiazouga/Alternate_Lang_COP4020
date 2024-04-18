@@ -8,7 +8,13 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-const path = "cells.csv"; // Replace "yourfile.csv" with the path to your CSV file
+const path = "cells.csv";
+
+/**
+ * Validates the input by checking if it's non-null, non-empty, and not a hyphen.
+ * @param {string} input - The input string to validate.
+ * @return {string|null} - Returns the trimmed input if valid, or null otherwise.
+ */
 
 function validateInput(input) {
     if (!input || input.trim() === '' || input.trim() === '-') {
@@ -35,9 +41,8 @@ class Cell {
     }
 
     parseYear(yearStr) {
-        //console.log("Parsing year from:", yearStr);  // Debug: Output the input string to parse
-        if (!yearStr || yearStr === '') {
-            //console.log("Input is invalid or not a string.");  // Debug: Log when input is invalid
+        if (!yearStr || yearStr === '' || yearStr === '-') {
+            console.log("Input is invalid or not a string.");  // Debug: Log when input is invalid
             return null;
         }
         yearStr = yearStr.toString();
@@ -63,13 +68,12 @@ class Cell {
         statusStr = statusStr.toString();
         const regex = /(\d{4})/;  // Regular expression to find a four-digit year
         const match = statusStr.match(regex);
-        //console.log(match)
         return match ? parseInt(match[0]) : null;  // Return the year string if found, else null
     }
 
 
     parseWeight(weightStr) {
-        if (!weightStr || weightStr === '') {
+        if (!weightStr || weightStr === '' || weightStr === '-') {
             return null
         }
         const regex = /^(\d+)/;  // Regular expression to find the leading integer
@@ -93,14 +97,13 @@ class Cell {
             const number = parseFloat(match[1]);
             const extraText = match[4] ? " inches" + match[4] : " inches";
             return `${number}${extraText}`;
-            //return number + extraText;
         } else {
             // If no valid format is found, return null
             return null;
         }
     }
     parsePlatformOS(osStr) {
-        if (!osStr || osStr.trim() === '') {
+        if (!osStr || osStr.trim() === '' || osStr.trim() === '-') {
             return null;  // Return null for missing or empty strings
         }
         // Use a regular expression to match everything up to the first comma, or the entire string if no comma exists
@@ -113,7 +116,7 @@ class Cell {
     parseFeaturesSensors(featuresStr) {
         featuresStr = featuresStr.toString();
 
-        if (featuresStr === '' || !featuresStr) {
+        if (featuresStr === '' || !featuresStr || featuresStr === '-') {
             return null; // Return null for invalid or missing inputs.
         }
         // Split the string by commas, trim each element, and filter out purely numeric entries.
@@ -121,10 +124,7 @@ class Cell {
         const validFeatures = features.filter(feature => isNaN(feature) || feature === 'V1'); // `isNaN` checks if the string is non-numeric or is 'V1'.
         return validFeatures.length > 0 ? validFeatures : null; // Return null if no valid features are left.
     }
-    //hasSingleFeatureSensor() {
-        // Check if features_sensors contains exactly one valid entry.
-        //return this.features_sensors && this.features_sensors.length === 1;
-    //}
+    
 
 
     // Getters
@@ -157,6 +157,10 @@ class Cell {
 
 }
 
+/**
+ * Main menu to handle user actions in the console interface.
+ */
+
 function mainMenu() {
 
     rl.question('Choose an action (add, delete, list, exit): ', (action) => {
@@ -181,6 +185,12 @@ function mainMenu() {
     });
 }
 
+/**
+ * Calculates which OEM has the highest average body weight of their cell phones.
+ * @param {Map} cellsMap - A Map of cell instances.
+ * @return {string} - The OEM with the highest average body weight.
+ */
+
 function findOEMWithHighestAverageWeight(cellsMap) {
     const weightSumByOEM = new Map();
     const countByOEM = new Map();
@@ -190,7 +200,7 @@ function findOEMWithHighestAverageWeight(cellsMap) {
         if (cell.body_weight !== null) {
             const weight = parseFloat(cell.body_weight);
             if (cell.oem === "HP") {
-                //console.log(cell.body_weight)
+                
             }
             if (weightSumByOEM.has(cell.oem)) {
                 weightSumByOEM.set(cell.oem, weightSumByOEM.get(cell.oem) + weight);
@@ -205,18 +215,16 @@ function findOEMWithHighestAverageWeight(cellsMap) {
                 countByOEM.set(cell.oem, 1);
             }
         } else {
-            //console.log(`Skipping invalid weight for model ${cell.model}`);
+            
         }
     });
 
-    //console.log("Weight Sums by OEM:", weightSumByOEM);
-    //console.log("Counts by OEM:", countByOEM);
+    
 
     let maxAverage = -Infinity; // Initialize maxAverage
     let oemWithMaxAverage = null;
 
     // Calculate the average weight per OEM
-    //console.log("Calculating averages...");
     weightSumByOEM.forEach((sum, oem) => {
         const average = sum / countByOEM.get(oem);
         //console.log(`OEM: ${oem}, Sum: ${sum}, Count: ${countByOEM.get(oem)}, Average: ${average}`);
@@ -225,11 +233,16 @@ function findOEMWithHighestAverageWeight(cellsMap) {
             oemWithMaxAverage = oem;
         }
     });
-    //console.log("Max average weight:", maxAverage);
+    
     console.log(`\n Question 1) \tOEM with the highest average body weight: ${oemWithMaxAverage} with max average weight: ${maxAverage} (grams)`);
     return oemWithMaxAverage; // Returns the OEM with the highest average weight
 }
 
+/**
+ * Counts how many phones have only one feature sensor.
+ * @param {Map} cells - A Map of cell instances.
+ * @return {number} - The count of phones with only one feature sensor.
+ */
 function countPhonesWithNoMoreThanOneSensor(cells) {
     let count = 0;
     cells.forEach(cell => {
@@ -241,6 +254,11 @@ function countPhonesWithNoMoreThanOneSensor(cells) {
     console.log(`\n Question 3) \tTotal number of phones without more than one sensor: ${count}`);
 }
 
+/**
+ * Counts how many phones were announced and launched in different years.
+ * @param {Map} cells - A Map of cell instances.
+ * @return {number} - The count of phones with different announce and launch years.
+ */
 function countDifferentAnnounceLaunchYears(cells) {
     let count = 0;
     cells.forEach(cell => {
@@ -252,6 +270,11 @@ function countDifferentAnnounceLaunchYears(cells) {
     return count;
 }
 
+/**
+ * Finds the year with the most phone launches after 1999.
+ * @param {Map} cells - A Map of cell instances.
+ * @return {number} - The year with the most launches.
+ */
 function findYearWithMostPhonesLaunched(cells) {
     const launchYearCounts = new Map();
 
@@ -275,6 +298,10 @@ function findYearWithMostPhonesLaunched(cells) {
     return maxYear;
 }
 
+/**
+ * Prompts the user to enter details for a new cell and adds it to the cells map.
+ * @param {Map} cells - A Map to store cell instances.
+ */
 function addCell(cells) {
 
     console.log("\n\nEnter details for a new cell:");
@@ -309,7 +336,10 @@ function addCell(cells) {
     });
 }
 
-
+/**
+ * Prompts the user for an index and deletes the corresponding cell from the map if found.
+ * @param {Map} cells - A Map containing cell instances.
+ */
 function deleteCell(cells) {
 
 
@@ -325,6 +355,10 @@ function deleteCell(cells) {
     });
 }
 
+/**
+ * Lists all unique values for each attribute of the cells stored in the map.
+ * @param {Map} cells - A Map containing cell instances.
+ */
 function listUniqueValues(cells) {
     const uniqueValues = {
         oem: new Set(),
