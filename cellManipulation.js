@@ -283,7 +283,7 @@ class CellManager {
         });
     }
 
-    findOEMWithHighestAverageWeight() {
+    findAverageWeight() {
         const weightSumByOEM = new Map();
         const countByOEM = new Map();
 
@@ -319,7 +319,7 @@ class CellManager {
         return oemWithMaxAverage;
     }
 
-    countPhonesWithNoMoreThanOneSensor() {
+    countPhonesSensor() {
         let count = 0;
         this.cells.forEach(cell => {
             const features = cell.features_sensors;
@@ -331,7 +331,7 @@ class CellManager {
         return count;
     }
 
-    countDifferentAnnounceLaunchYears() {
+    countDiffYears() {
         let count = 0;
         this.cells.forEach(cell => {
             if (cell.launch_announced && cell.launch_status && cell.launch_announced !== cell.launch_status) {
@@ -342,7 +342,7 @@ class CellManager {
         return count;
     }
 
-    findYearWithMostPhonesLaunched() {
+    findYearLaunched() {
         const launchYearCounts = new Map();
         this.cells.forEach(cell => {
             const launchYear = cell.launch_status;
@@ -401,10 +401,10 @@ fs.createReadStream(path)
         console.log('CSV file has been successfully processed. \n');
 
         // Perform operations using methods from CellManager
-        cellManager.findOEMWithHighestAverageWeight();
-        cellManager.countDifferentAnnounceLaunchYears();
-        cellManager.countPhonesWithNoMoreThanOneSensor();
-        cellManager.findYearWithMostPhonesLaunched();
+        cellManager.findAverageWeight();
+        cellManager.countDiffYears();
+        cellManager.countPhonesSensor();
+        cellManager.findYearLaunched();
         cellManager.mainMenu();
     })
     .on('error', (err) => {
